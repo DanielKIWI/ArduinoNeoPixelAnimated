@@ -11,7 +11,8 @@
 
 
 #include <LinkedList.h>
-
+#define micsTOs 1000 * 1000
+#define sTOmics 1 / msTOs
 
 class TimerQueueClass
 {
@@ -34,10 +35,35 @@ class TimerQueueClass
 	 };
     
     struct AnimationTask {
-       	(*task)(value)
-         unsigned long lastExecuted;
-      float
-		//	start und end value
+		void (*_task)(float)
+        unsigned long lastExecuted;
+        unsigned long endTimeMicros;
+        float startValue, endValue, actValue;
+        float duration;
+        float timeDone;
+        AnimationTask(void (*task)(float), float start, float end, float dur){
+			_task = task;
+			startValue = start;
+			actValue = start;
+			endValue = end;
+			duration = dur;
+			endTimeMicros = micros() + (unsigned long)(duration * sTOmics);
+			timeDone = 0;
+			lastExecuted = micros();
+        }
+        //returns whether animation iscompleted
+        bool execute() {
+			unsigned long time = micros();
+			if (time > endTimeMicros){
+				_task(endValue)
+				return true
+			}
+			float deltaTime = (float)(time - lastExecuted) * micsTOs
+			actValue += deltaTime / duration * (endValue - startValue)
+			_task(actValue)
+			lastExecuted = time;
+			return false;
+        }
 		//	speed/ duration
 		//	wenn executed
     }
