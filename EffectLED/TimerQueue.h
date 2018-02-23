@@ -17,14 +17,14 @@ class TimerQueueClass
 {
  protected:
 
-	 struct QueueTask {
+	 struct TimedTask {
 		 float (*_task)() = 0;
 		 unsigned long dueTime;
 		 QueueTask() {
 			 _task = NULL;
 			 dueTime = 0;
 		 }
-		 QueueTask(float (*task)(), float deltaTime) {
+		 TimedTask(float (*task)(), float deltaTime) {
 			 _task = task;
 			 dueTime = (float)micros() + (unsigned long)deltaTime * (10 ^ 6);
 		 }
@@ -32,7 +32,17 @@ class TimerQueueClass
 			 return _task();
 		 }
 	 };
-	 LinkedList<QueueTask> queue;
+    
+    struct AnimationTask {
+       	(*task)(value)
+         unsigned long lastExecuted;
+      float
+		//	start und end value
+		//	speed/ duration
+		//	wenn executed
+    }
+
+	 LinkedList<TimedTask> queue;
 
  public:
 	void init();
