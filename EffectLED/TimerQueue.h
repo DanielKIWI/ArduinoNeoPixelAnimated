@@ -10,93 +10,81 @@
 #endif
 
 
-#include <LinkedList.h>
+#include "LinkedList.h"
 #define micsTOs 1000 * 1000
-#define sTOmics 1 / msTOs
+#define sTOmics 1 / micsTOs
+
+
+struct TimedTask {
+	float(*_task)() = 0;
+	unsigned long dueTime;
+	TimedTask() {
+		_task = NULL;
+		dueTime = 0;
+	}
+	TimedTask(float(*task)(), float deltaTime) {
+		_task = task;
+		dueTime = (float)micros() + (unsigned long)deltaTime * (10 ^ 6);
+	}
+	float execute() {
+		if (_task != NULL) {
+			return _task();
+		}
+		else return -1;
+	}
+};
+
+struct AnimationTask {
+	float(*_task)(float);
+	unsigned long lastExecuted;
+	unsigned long endTimeMicros;
+	float startValue, endValue, actValue;
+	float duration;
+	float timeDone;
+	AnimationTask(float(*task)(float), float start, float end, float dur) {
+		_task = task;
+		startValue = start;
+		actValue = start;
+		endValue = end;
+		duration = dur;
+		endTimeMicros = micros() + (unsigned long)(duration * sTOmics);
+		timeDone = 0;
+		lastExecuted = micros();
+	}
+	//returns whether animation iscompleted
+	bool execute() {
+		unsigned long time = micros();
+		if (time > endTimeMicros) {
+			_task(endValue);
+			return true;
+		}
+		float deltaTime = (float)(time - lastExecuted) * micsTOs;
+		actValue += deltaTime / duration * (endValue - startValue);
+		_task(actValue);
+		lastExecuted = time;
+		return false;
+	}
+};
 
 class TimerQueueClass
 {
  protected:
 
-	 struct TimedTask {
-		 float (*_task)() = 0;
-		 unsigned long dueTime;
-		 QueueTask() {
-			 _task = NULL;
-			 dueTime = 0;
-		 }
-		 TimedTask(float (*task)(), float deltaTime) {
-			 _task = task;
-			 dueTime = (float)micros() + (unsigned long)deltaTime * (10 ^ 6);
-		 }
-		 float execute() {
-			 return _task();
-		 }
-	 };
-    
-    struct AnimationTask {
-		void (*_task)(float)
-        unsigned long lastExecuted;
-        unsigned long endTimeMicros;
-        float startValue, endValue, actValue;
-        float duration;
-        float timeDone;
-        AnimationTask(void (*task)(float), float start, float end, float dur){
-			_task = task;
-			startValue = start;
-			actValue = start;
-			endValue = end;
-			duration = dur;
-			endTimeMicros = micros() + (unsigned long)(duration * sTOmics);
-			timeDone = 0;
-			lastExecuted = micros();
-        }
-        //returns whether animation iscompleted
-        bool execute() {
-			unsigned long time = micros();
-			if (time > endTimeMicros){
-				_task(endValue)
-				return true
-			}
-			float deltaTime = (float)(time - lastExecuted) * micsTOs
-			actValue += deltaTime / duration * (endValue - startValue)
-			_task(actValue)
-			lastExecuted = time;
-			return false;
-        }
-		//	speed/ duration
-		//	wenn executed
-    }
+	 
 
-	 LinkedList<TimedTask> queue;
+	LinkedList<TimedTask> TaskQueue;
+	LinkedList<AnimationTask> AnimationQueue;
+	ListNode<AnimationTask> *firstDoneThisFrame;
 
  public:
 	void init();
 
 	void doTaskInSec(float(*_task)(), float secondsTillExecute);
 
-	void animate() {
-		//animation queue
-		//	(*task)(value)
-		//	lastExecuted
-		//	start und end value
-		//	speed/ duration
-		//	wenn executed kommt ans ende wenn noch nicht fertig
-		//  
-	}
+	void AddAnimationTask(float(*_task)(float value), float minValue, float maxValue, float duration);
+	void animate();
 
-	void nextTask() {
-		if (queue.size() > 0) {
-			QueueTask topTask = queue.pop();
-			if (topTask.dueTime <= micros()) {
-				float nextTime = topTask.execute();
-			}
-			else {
-				animate();
-			}
-
-		}
-	}
+	void nextTask();
 
 };
 
