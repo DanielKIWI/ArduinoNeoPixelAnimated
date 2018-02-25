@@ -83,14 +83,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Users\Daniel\Documents\Arduino\libraries\LinkedList\LinkedList.h" />
+    <ClInclude Include="Color.h" />
     <ClInclude Include="LedPixels.h" />
     <ClInclude Include="TimerQueue.h" />
     <ClInclude Include="__vm\.EffectLED.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LedPixels.cpp" />
-    <ClCompile Include="LinkedList.cpp" />
-    <ClCompile Include="TimerQueue.cpp" />
+    <ClCompile Include="Color.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
