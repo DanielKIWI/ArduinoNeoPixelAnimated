@@ -12,10 +12,10 @@
 #endif
 
 
-LedPixelsClass LedPixels = LedPixelsClass();
+LedPixelsClass LedPixels = LedPixelsClass(3, 108);
 
 void setup() {
-	LedPixels.init(3, 108);
+	//LedPixels.init(3, 108);
 
 }
 

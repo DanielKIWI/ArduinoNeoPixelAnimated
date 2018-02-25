@@ -14,81 +14,271 @@
 #define micsTOs 1000 * 1000
 #define sTOmics 1 / micsTOs
 
+template<typename ParameterStruct>
+class Task {
+public:
+	virtual float execute() {
 
-struct TimedTask {
-	float(*_task)() = 0;
+	}
+};
+
+template<typename ParameterStruct>
+class TimedTask : Task<ParameterStruct> {
+private:
+	float(*task)(ParameterStruct) = 0;
+	ParameterStruct parameter;
+public:
 	unsigned long dueTime;
 	TimedTask() {
-		_task = NULL;
+		task = NULL;
+		parameter = ParameterStruct();
 		dueTime = 0;
 	}
-	TimedTask(float(*task)(), float deltaTime) {
-		_task = task;
+	TimedTask(float(*t)(ParameterStruct), ParameterStruct param, float deltaTime) {
+		task = t;
+		parameter = param;
 		dueTime = (float)micros() + (unsigned long)deltaTime * (10 ^ 6);
 	}
-	float execute() {
-		if (_task != NULL) {
-			return _task();
+	float execute() override {
+		if (task != NULL) {
+			return task(parameter);
 		}
 		else return -1;
 	}
 };
+enum AnimationCurve {
+	Linear,
+	Squared,
+	Logistic,
+	GaussBlink
+};
 
-struct AnimationTask {
-	float(*_task)(float);
-	unsigned long lastExecuted;
-	unsigned long endTimeMicros;
-	float startValue, endValue, actValue;
+template<typename ParameterStruct>
+class AnimationTask : Task<ParameterStruct> {
+private:
+	void(*task)(float, ParameterStruct);
+	ParameterStruct parameter;
+	AnimationCurve cuve;
+	//unsigned long lastExecuted;
+	//unsigned long endTimeMicros;
+	void *startValue, *endValue, *actValue;
 	float duration;
 	float timeDone;
-	AnimationTask(float(*task)(float), float start, float end, float dur) {
-		_task = task;
+public:
+	AnimationTask() {
+		task = NULL;
+		parameter = ParameterStruct();
+		AnimationCurve curve = Linear;
+		startValue = endValue = actValue = NULL;
+		duration = timeDone = 0.f;
+	}
+	AnimationTask(void(*t)(float, ParameterStruct), ParameterStruct param, void *start, void *end, float dur, AnimationCurve c, unsigned long time) {
+		task = t;
+		parameter = param;
+		this.curve = c;
 		startValue = start;
 		actValue = start;
 		endValue = end;
 		duration = dur;
-		endTimeMicros = micros() + (unsigned long)(duration * sTOmics);
+		//this.endTimeMicros = time + (unsigned long)(duration * sTOmics);
 		timeDone = 0;
-		lastExecuted = micros();
+		//this.lastExecuted = time;
+	}
+	void* getActValue() {
+		return startValue;
 	}
 	//returns whether animation iscompleted
-	bool execute() {
-		unsigned long time = micros();
-		if (time > endTimeMicros) {
-			_task(endValue);
+	bool execute(float deltaTime) {
+		timeDone += deltaTime; 
+		if (timeDone > duration) {
+			task(endValue, parameter);
 			return true;
 		}
-		float deltaTime = (float)(time - lastExecuted) * micsTOs;
-		actValue += deltaTime / duration * (endValue - startValue);
-		_task(actValue);
-		lastExecuted = time;
+		/*
+		//float deltaTime = (float)(time - lastExecuted) * micsTOs;
+		switch (this.curve)
+		{
+		case Linear:
+			actValue = timeDone / duration * (endValue - startValue);
+			break;
+
+		default:
+			actValue = timeDone / duration * (endValue - startValue);
+			break;
+		}
+		task(actValue, parameter);*/
+		return false;
+	}
+};
+template<typename ParameterStruct>
+class FloatAnimationTask : AnimationTask<ParameterStruct> {
+private:
+	void(*task)(float, ParameterStruct);
+	ParameterStruct parameter;
+	AnimationCurve cuve;
+	//unsigned long lastExecuted;
+	//unsigned long endTimeMicros;
+	float startValue, endValue, actValue;
+	float duration;
+	float timeDone;
+public:
+	FloatAnimationTask() override {
+		task = NULL;
+		parameter = ParameterStruct();
+		AnimationCurve curve = Linear;
+		startValue = endValue = actValue = 0.f;
+		duration = timeDone = 0.f;
+	}
+
+	FloatAnimationTask(void(*t)(float, ParameterStruct), ParameterStruct param, void *start, void *end, float dur, AnimationCurve c, unsigned long time) override {
+		task = t;
+		parameter = param;
+		this.curve = c;
+		startValue = *static_cast<float*>(start);
+		actValue = startValue;
+		endValue = *static_cast<float*>(end);
+		duration = dur;
+		//this.endTimeMicros = time + (unsigned long)(duration * sTOmics);
+		timeDone = 0;
+		//this.lastExecuted = time;
+	}
+	FloatAnimationTask(void(*t)(float, ParameterStruct), ParameterStruct param, float start, float end, float dur, AnimationCurve c, unsigned long time) {
+		task = t;
+		parameter = param;
+		this.curve = c;
+		startValue = start;
+		actValue = start;
+		endValue = end;
+		duration = dur;
+		//this.endTimeMicros = time + (unsigned long)(duration * sTOmics);
+		timeDone = 0;
+		//this.lastExecuted = time;
+	}
+	float getActValue() override {
+		switch (this.curve)
+		{
+		case Linear:
+			actValue = timeDone / duration * (endValue - startValue);
+			break;
+
+		default:
+			actValue = timeDone / duration * (endValue - startValue);
+			break;
+		}
+	}
+	//returns whether animation iscompleted
+	bool execute(float deltaTime) {
+		timeDone += deltaTime;
+		if (timeDone > duration) {
+			task(endValue, parameter);
+			return true;
+		}
+		//float deltaTime = (float)(time - lastExecuted) * micsTOs;
+		actValue = getActValue();
+		task(actValue, parameter);
 		return false;
 	}
 };
 
+template<typename TaskParam, typename AnimParam>
 class TimerQueueClass
 {
  protected:
 
-	 
+	LinkedList<TimedTask<TaskParam>> TaskQueue;
+	LinkedList<AnimationTask<AnimParam>> AnimationQueue;
+	ListNode<AnimationTask<AnimParam>> *firstDoneThisFrame = NULL;
 
-	LinkedList<TimedTask> TaskQueue;
-	LinkedList<AnimationTask> AnimationQueue;
-	ListNode<AnimationTask> *firstDoneThisFrame;
+	unsigned long lastTimeAnimated = 0;
 
  public:
-	void init();
+	
+	 TimerQueueClass<TaskParam, AnimParam>();/* : TaskQueue(), AnimationQueue() {
 
-	void doTaskInSec(float(*_task)(), float secondsTillExecute);
+	}*/
 
-	void AddAnimationTask(float(*_task)(float value), float minValue, float maxValue, float duration);
+	//void init();
+	bool sortforDueTime(TimedTask<TaskParam> left, TimedTask<TaskParam> right);
+	void doTaskInSec(float(*task)(TaskParam), TaskParam param, float secondsTillExecute);
+	
+	void addTask(float(*task)(TaskParam), TaskParam param);
+
+	void addAnimationTask(float(*task)(float, AnimParam), float minValue, float maxValue, float duration, AnimationCurve c = Linear);
+
 	void animate();
 
 	void nextTask();
 
 };
 
-extern TimerQueueClass TimerQueue;
+//extern TimerQueueClass TimerQueue;
 
 #endif
 
+
+template<typename TaskParam, typename AnimParam>
+TimerQueueClass<TaskParam, AnimParam>::TimerQueueClass() {
+	TaskQueue = LinkedList<TimedTask<TaskParam>>();
+	AnimationQueue = LinkedList<AnimationTask<AnimParam>>();
+}
+/*
+template<typename TaskParam, typename AnimParam>
+void TimerQueueClass<TaskParam, AnimParam>::init()
+{
+	TaskQueue = LinkedList<TimedTask<TaskParam>>();
+	AnimationQueue = LinkedList<AnimationTask<AnimParam>>();
+
+}*/
+
+template<typename TaskParam, typename AnimParam>
+void TimerQueueClass<TaskParam, AnimParam>::addTask(float(*task)(TaskParam), TaskParam param)
+{
+	TimedTask<TaskParam> newTimedTask = TimedTask<TaskParam>(task, param, micros());
+	AnimationQueue.addBack(newTimedTask);
+
+}
+template<typename TaskParam, typename AnimParam>
+static bool TimerQueueClass<TaskParam, AnimParam>::sortforDueTime(TimedTask<TaskParam> left, TimedTask<TaskParam> right) {
+	return left.dueTime < right.dueTime;
+}
+template<typename TaskParam, typename AnimParam>
+void TimerQueueClass<TaskParam, AnimParam>::doTaskInSec(float(*task)(TaskParam), TaskParam param, float secondsTillExecute)
+{
+	TimedTask<TaskParam> newTimedTask = TimedTask<TaskParam>(task, param, secondsTillExecute);
+
+	AnimationQueue.sortIn(newTimedTask, &sortforDueTime);
+}
+
+template<typename TaskParam, typename AnimParam>
+void TimerQueueClass<TaskParam, AnimParam>::addAnimationTask(float(*task)(float, AnimParam), float minValue, float maxValue, float duration, AnimationCurve c = Linear)
+{
+	AnimationTask<AnimParam> newAnimationTask = AnimationTask<AnimParam>(task, minValue, maxValue, duration, c, micros());
+	AnimationQueue.addBack(newAnimationTask);
+}
+
+template<typename TaskParam, typename AnimParam>
+void TimerQueueClass<TaskParam, AnimParam>::animate()
+{
+	float deltaTime = (float)(micros() - lastTimeAnimated) * micsTOs;
+	if (AnimationQueue.size() > 0) {
+		AnimationTask<AnimParam> task = AnimationQueue.front();
+		while (task.task != NULL) {
+			task.execute(deltaTime);
+		}
+	}
+
+}
+
+template<typename TaskParam, typename AnimParam>
+void TimerQueueClass<TaskParam, AnimParam>::nextTask() {
+	if (TaskQueue.size() > 0) {
+		TimedTask<TaskParam> topTask = TaskQueue.top();
+		if (topTask.dueTime <= micros()) {
+			float nextTime = topTask.execute();
+		}
+		else {
+			animate();
+		}
+
+	}
+}

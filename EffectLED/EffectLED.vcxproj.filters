@@ -27,12 +27,18 @@
     <ClInclude Include="TimerQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Users\Daniel\Documents\Arduino\libraries\LinkedList\LinkedList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LedPixels.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TimerQueue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LinkedList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
