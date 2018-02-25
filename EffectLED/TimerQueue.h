@@ -11,6 +11,7 @@
 
 
 #include "LinkedList.h"
+#include "Color.h"
 #define micsTOs 1000 * 1000
 #define sTOmics 1 / micsTOs
 
@@ -50,18 +51,28 @@ enum AnimationCurve {
 	Linear,
 	Squared,
 	Logistic,
-	GaussBlink
+	GaussBlink,
+	Loop,
+	PingPong
+};
+
+enum Type
+{
+	INT,
+	FLOAT,
+	COLOR,
 };
 
 template<typename ParameterStruct>
 class AnimationTask : Task<ParameterStruct> {
 private:
-	void(*task)(float, ParameterStruct);
+	void(*task)(void*, ParameterStruct);
 	ParameterStruct parameter;
 	AnimationCurve cuve;
 	//unsigned long lastExecuted;
 	//unsigned long endTimeMicros;
 	void *startValue, *endValue, *actValue;
+	Type valueType;
 	float duration;
 	float timeDone;
 public:
@@ -72,7 +83,8 @@ public:
 		startValue = endValue = actValue = NULL;
 		duration = timeDone = 0.f;
 	}
-	AnimationTask(void(*t)(float, ParameterStruct), ParameterStruct param, void *start, void *end, float dur, AnimationCurve c, unsigned long time) {
+	AnimationTask(void(*t)(void*, ParameterStruct), ParameterStruct param, Type type, void *start, void *end, float dur, AnimationCurve c, unsigned long time) {
+		valueType = type;
 		task = t;
 		parameter = param;
 		this.curve = c;
@@ -85,7 +97,33 @@ public:
 		//this.lastExecuted = time;
 	}
 	void* getActValue() {
-		return startValue;
+		float factor = timeDone / duration;
+		switch (valueType) {
+		case INT:
+			int istart = *static_cast<int*>(startValue);
+			int iend = *static_cast<int*>(startValue);
+			int iact = istart + (int)((iend - istart) * factor);
+			int *iresult = new int(iact);
+			return iresult;
+			break;
+		case FLOAT:
+			float fstart = *static_cast<float*>(startValue);
+			float fend = *static_cast<float*>(startValue);
+			float fact = fstart + ((fend - fstart) * factor);
+			float *fresult = new float(fact);
+			return fresult;
+			break;
+		case COLOR:
+			Color cstart = *static_cast<Color*>(startValue);
+			Color cend = *static_cast<Color*>(startValue);
+			Color cact = (cstart + cend * factor) - cstart * factor;
+			Color *cresult = new Color(cact);
+			return cresult;
+			break;
+		default:
+			return startValue;
+			break;
+		}
 	}
 	//returns whether animation iscompleted
 	bool execute(float deltaTime) {
@@ -94,6 +132,7 @@ public:
 			task(endValue, parameter);
 			return true;
 		}
+
 		/*
 		//float deltaTime = (float)(time - lastExecuted) * micsTOs;
 		switch (this.curve)

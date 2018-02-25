@@ -13,40 +13,6 @@
 //#include <map>
 #include "TimerQueue.h"
 
-class Color {
-private:
-	uint32_t rawValue;
-	uint8_t red, green, blue, white;
-public:
-	static const uint32_t rgb(uint8_t r, uint8_t g, uint8_t b) {
-		return ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
-	}
-	static const uint32_t rgbw(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
-		return ((uint32_t)w << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
-	}
-	Color() {
-		red = 0; green = 0; blue = 0; white = 0;
-		rawValue = 0;
-	}
-	Color(int r, int g, int b) {
-		red = r; green = g; blue = b; white = 0;
-		rawValue = rgb(r, g, b);
-	}
-	Color(int r, int g, int b, int w) {
-		red = r; green = g; blue = b; white = w;
-		rawValue = rgbw(r, g, b, w);
-	}
-	Color(uint32_t raw) {
-		rawValue = raw;
-		//TODO
-	}
-	static Color RED;
-	static Color GREEN;
-	static Color BLUE;
-	static Color YELLOW;
-	static Color WHITE;
-	static Color BLACK;
-};
 
 struct TaskParmeter {
 	int intCount, floatCount;
