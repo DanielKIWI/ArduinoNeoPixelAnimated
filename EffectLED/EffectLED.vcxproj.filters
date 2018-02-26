@@ -24,13 +24,16 @@
     <ClInclude Include="LedPixels.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TimerQueue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Users\Daniel\Documents\Arduino\libraries\LinkedList\LinkedList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Color.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DispatchQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Math.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

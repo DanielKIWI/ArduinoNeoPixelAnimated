@@ -11,14 +11,17 @@
 
 #include <Adafruit_NeoPixel.h>
 //#include <map>
-#include "TimerQueue.h"
+#include "DispatchQueue.h"
 
+#define FPS  60
 
-struct TaskParmeter {
+struct TaskParameter {
 	int intCount, floatCount;
 	int *integers;
 	float *floats;	
-	TaskParmeter() {
+	Color *colors;
+	void **pointers;
+	TaskParameter() {
 		intCount = 0;
 		floatCount = 0;
 		integers = NULL;
@@ -42,6 +45,15 @@ struct TaskParmeter {
 			integers[i] = va_arg(argList, int);
 		}
 	}
+	void setPointers(int count, ...) {
+		intCount = count;
+		*pointers = malloc(sizeof(void *) * count);;
+		va_list argList;
+		va_start(argList, count);
+		for (int i = 0; i < count; i++) {
+			integers[i] = va_arg(argList, int);
+		}
+	}
 	bool changeFloat(int index, float newValue) {
 		if (index < floatCount) {
 			floats[index] = newValue;
@@ -53,12 +65,11 @@ struct TaskParmeter {
 		}
 	}
 };
-
+/*
 struct LedAnimationParam {
 public:
 	int pixelIndex;
-	void *startState;
-	void *endState;
+	void *Info
 	Adafruit_NeoPixel *LedSegment;
 	LedAnimationParam() {
 		pixelIndex = 0;
@@ -78,29 +89,29 @@ public:
 		endState = end;
 		LedSegment = segment;
 	}
-};
+};*/
+
+DispatchQueueClass<TaskParameter, TaskParameter> DispatchQueue = DispatchQueueClass<TaskParameter, TaskParameter>::DispatchQueueClass(FPS);
 
 class LedPixelsClass
 {
  protected:
-
+	 //int FPS = 60;
 	 int PIN;
 	 int NUMPIXELS = 108;
 
 	 Adafruit_NeoPixel pixels;
 
-	 TimerQueueClass<TaskParmeter, LedAnimationParam> TimerQueue;
 	  
  public:
 	LedPixelsClass();
-	LedPixelsClass(int pin, int numPixels);
-	void init(int pin, int numPixels);
+	LedPixelsClass(int pin, int numPixels, int fps = 60);
 
 	void circleAround(int delayval, int length, int count, int colorCount, ...);
 
-	void LedPixelsClass::InitAnimatedcircleAround(float speed, int length, int start, Color color);
+	void InitAnimatedcircleAround(float speed, int length, int start, Color color);
 
-	void LedPixelsClass::AnimatedcircleAround(TaskParmeter param);
+	//void AnimatedcircleAround(TaskParameter *param);
 
 	//void Fade
 };

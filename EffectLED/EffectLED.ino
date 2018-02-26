@@ -5,6 +5,7 @@
 */
 
 
+#include "Math.h"
 #include "LedPixels.h"
 #include <pRNG.h>
 #ifdef __AVR__
@@ -19,9 +20,7 @@ void setup() {
 
 }
 
-
-
 void loop() {
-	LedPixels.circleAround(100, 10, 4, 1, Color::RED, Color::GREEN, Color::BLUE, Color::WHITE);
+	//LedPixels.circleAround(100, 10, 4, 1, Color::RED, Color::GREEN, Color::BLUE, Color::WHITE);
 
 }
