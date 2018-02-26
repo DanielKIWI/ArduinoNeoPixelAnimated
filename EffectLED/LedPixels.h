@@ -64,6 +64,11 @@ struct TaskParameter {
 			integers[index] = newValue;
 		}
 	}
+	bool changePointer(int index, void *newValue) {
+		if (index < intCount) {
+			pointers[index] = newValue;
+		}
+	}
 };
 /*
 struct LedAnimationParam {
@@ -91,8 +96,6 @@ public:
 	}
 };*/
 
-DispatchQueueClass<TaskParameter, TaskParameter> DispatchQueue = DispatchQueueClass<TaskParameter, TaskParameter>::DispatchQueueClass(FPS);
-
 class LedPixelsClass
 {
  protected:
@@ -100,23 +103,33 @@ class LedPixelsClass
 	 int PIN;
 	 int NUMPIXELS = 108;
 
-	 Adafruit_NeoPixel pixels;
-
+	 DispatchQueueClass<TaskParameter, TaskParameter> *DispatchQueue;
 	  
  public:
+	 Adafruit_NeoPixel pixels;
 	LedPixelsClass();
-	LedPixelsClass(int pin, int numPixels, int fps = 60);
+	LedPixelsClass(int pin, int numPixels, int fps = 60, DispatchQueueClass<TaskParameter, TaskParameter> *dq = NULL);
 
 	void circleAround(int delayval, int length, int count, int colorCount, ...);
 
 	void InitAnimatedcircleAround(float speed, int length, int start, Color color);
 
-	//void AnimatedcircleAround(TaskParameter *param);
+	static void setPixelBrightnessTo(float value, TaskParameter *param);
 
-	//void Fade
+	static bool AnimatedcircleAround(TaskParameter *param);
+
+	void Loop() {
+		DispatchQueue->Loop();
+	}
+
+	void showPixels();
 };
 
-extern LedPixelsClass LedPixels;
+//extern LedPixelsClass LedPixels;
+
+
+
+
 
 #endif
 

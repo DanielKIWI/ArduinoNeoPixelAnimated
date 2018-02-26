@@ -15,10 +15,7 @@
 #define micsTOs 1000 * 1000
 #define sTOmics 1 / micsTOs
 
-template<typename ParameterStruct>
 class Task {
-protected:
-	ParameterStruct *parameter;
 public:
 	unsigned long dueTime;
 	virtual bool execute() {
@@ -30,7 +27,20 @@ public:
 };
 
 template<typename ParameterStruct>
-class TimedTask : public Task<ParameterStruct> {
+class ParameterTask : public Task {
+protected:
+	ParameterStruct *parameter;
+public:
+	virtual bool execute() {
+
+	}
+	virtual bool execute(float deltaTime) {
+		return execute();
+	}
+};
+
+template<typename ParameterStruct>
+class TimedTask : public ParameterTask<ParameterStruct> {
 private:
 	void(*task)(ParameterStruct*) = 0;
 public:
@@ -96,7 +106,7 @@ typedef enum Type
 } Type;
 
 template<typename ParameterStruct>
-class AnimationTask : public Task<ParameterStruct> {
+class AnimationTask : public ParameterTask<ParameterStruct> {
 private:
 	void(*task)(void*, ParameterStruct*);
 	//unsigned long lastExecuted;
@@ -233,7 +243,7 @@ public:
 		//this.lastExecuted = time;
 	}
 	//returns whether animation iscompleted
-	bool execute(float deltaTime) {
+	bool execute(float deltaTime) override {
 		this->timeDone += deltaTime;
 		if (this->timeDone > this->duration) {
 			task(endValue, this->parameter);
@@ -251,24 +261,24 @@ class DispatchQueueClass
 {
  protected:
 
-	LinkedList<Task<TaskParam>> TaskQueue;
-	LinkedList<Task<AnimParam>> AnimationQueue;
-	ListNode<AnimationTask<AnimParam>> *firstDoneThisFrame = NULL;
+	LinkedList<ParameterTask<TaskParam>> TaskQueue;
+	LinkedList<ParameterTask<AnimParam>> AnimationQueue;
+	ListNode<ParameterTask<AnimParam>> *firstDoneThisFrame = NULL;
 	unsigned long nexTaskDueTime = 0;
 	unsigned long nextAnimationDueTime = 0;
 	unsigned long lastTimeAnimated = 0;
 	unsigned long animationDeltaTime;
-
+	//void(*finishAnimationTask)();
  public:
 	
 	 DispatchQueueClass();
 
-	 DispatchQueueClass(float fps);/* : TaskQueue(), AnimationQueue() {
+	 DispatchQueueClass(float fps/*, void (*finishAnimTask)()*/);/* : TaskQueue(), AnimationQueue() {
 
 	}*/
 
 	//void init();
-	bool sortforDueTime(Task<TaskParam> left, Task<TaskParam> right);
+	//bool sortforDueTime(ParameterTask<TaskParam> left, ParameterTask<TaskParam> right);
 	void doTaskInSec(bool(*task)(TaskParam*), TaskParam *param, float secondsTillExecute);
 	
 	void addTask(bool(*task)(TaskParam*), TaskParam *param);
@@ -292,13 +302,17 @@ class DispatchQueueClass
 template<typename TaskParam, typename AnimParam>
 DispatchQueueClass<TaskParam, AnimParam>::DispatchQueueClass()
 {
-	DispatchQueueClass<TaskParam, AnimParam>(60);
+	TaskQueue = LinkedList<ParameterTask<TaskParam>>();
+	AnimationQueue = LinkedList<ParameterTask<AnimParam>>();
+	animationDeltaTime = (unsigned long)((1 / 60) * sTOmics);
+	//DispatchQueueClass<TaskParam, AnimParam>(60);
 }
 
 template<typename TaskParam, typename AnimParam>
-DispatchQueueClass<TaskParam, AnimParam>::DispatchQueueClass(float fps) {
-	TaskQueue		= LinkedList<Task<TaskParam>>();
-	AnimationQueue	= LinkedList<Task<AnimParam>>();
+DispatchQueueClass<TaskParam, AnimParam>::DispatchQueueClass(float fps/*, void(*finishAnimTask)()*/) {
+	//finishAnimationTask = finishAnimTask;
+	TaskQueue		= LinkedList<ParameterTask<TaskParam>>();
+	AnimationQueue	= LinkedList<ParameterTask<AnimParam>>();
 	animationDeltaTime = (unsigned long)( (1 / fps) * sTOmics );
 }
 /*
@@ -323,8 +337,8 @@ void DispatchQueueClass<TaskParam, AnimParam>::addRepeatingTask(bool(*task)(Task
 	FrequentTask<TaskParam> newTask = FrequentTask<TaskParam>(task, param, deltaTime);
 	AnimationQueue.addBack(newTask);
 }
-template<typename TaskParam, typename AnimParam>
-static bool DispatchQueueClass<TaskParam, AnimParam>::sortforDueTime(Task<TaskParam> left, Task<TaskParam> right) {
+
+static bool sortforDueTime(Task left, Task right) {
 	return left.dueTime < right.dueTime;
 }
 template<typename TaskParam, typename AnimParam>
@@ -353,8 +367,8 @@ void DispatchQueueClass<TaskParam, AnimParam>::animate(float deltaTime)
 {
 	if (AnimationQueue.size() > 0) {
 		
-		while (AnimationQueue.root != firstDoneThisFrame) {
-			AnimationTask<AnimParam> task = AnimationQueue.front();
+		while (AnimationQueue.getRoot() != firstDoneThisFrame) {
+			ParameterTask<AnimParam> task = AnimationQueue.front();
 			bool doAgain = task.execute(deltaTime);
 			if (!doAgain) {
 				AnimationQueue.cycleThrough();
@@ -363,17 +377,18 @@ void DispatchQueueClass<TaskParam, AnimParam>::animate(float deltaTime)
 				AnimationQueue.removeFront();
 			}
 		}
+		//finishAnimationTask();
 	}
 }
 
 template<typename TaskParam, typename AnimParam>
-unsigned long DispatchQueueClass<TaskParam, AnimParam>::tryNextTask(unsigned long time = micros()) {
+unsigned long DispatchQueueClass<TaskParam, AnimParam>::tryNextTask(unsigned long time/* = micros()*/) {
 	if (TaskQueue.size() > 0) {
-		TimedTask<TaskParam> topTask = TaskQueue.front();
+		ParameterTask<TaskParam> topTask = TaskQueue.front();
 		if (topTask.dueTime <= time) {
 			bool doAgain = topTask.execute();
 			if (doAgain) {
-
+				TaskQueue.sortFrontIn(&sortforDueTime);
 			}
 			else {
 				TaskQueue.removeFront();
@@ -395,8 +410,8 @@ void DispatchQueueClass<TaskParam, AnimParam>::Loop() {
 			nextAnimationDueTime += animationDeltaTime;
 			animate(actualDeltaTime);
 		}
-		else if (time > nexTaskDueTime){
-			nexTaskDueTime = tryNextTask();
+		else if (time > nexTaskDueTime) {
+			nexTaskDueTime = tryNextTask(time);
 		}
 	}
 }

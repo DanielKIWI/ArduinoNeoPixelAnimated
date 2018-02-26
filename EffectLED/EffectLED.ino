@@ -5,7 +5,7 @@
 */
 
 
-#include "Math.h"
+//#include "Math.h"
 #include "LedPixels.h"
 #include <pRNG.h>
 #ifdef __AVR__
@@ -17,10 +17,12 @@ LedPixelsClass LedPixels = LedPixelsClass(3, 108);
 
 void setup() {
 	//LedPixels.init(3, 108);
-
+	LedPixels.pixels.setPixelColor(0, Color::BLUE.rawValue());
+	LedPixels.InitAnimatedcircleAround(2, 10, 0, Color::RED);
+	LedPixels.Loop();
 }
 
 void loop() {
 	//LedPixels.circleAround(100, 10, 4, 1, Color::RED, Color::GREEN, Color::BLUE, Color::WHITE);
-
+	
 }
