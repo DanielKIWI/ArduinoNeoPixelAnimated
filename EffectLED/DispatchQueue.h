@@ -12,8 +12,8 @@
 #include "Math.h"
 #include "LinkedList.h"
 #include "Color.h"
-#define micsTOs 1000 * 1000
-#define sTOmics 1 / micsTOs
+#define sTOmics 1e6
+#define micsTOs 1e-6
 
 class Task {
 public:
@@ -31,10 +31,11 @@ class ParameterTask : public Task {
 protected:
 	ParameterStruct *parameter;
 public:
-	virtual bool execute() {
-
+	bool execute() override {
+		Serial.println("ParameterTask::execute");
+		return true;
 	}
-	virtual bool execute(float deltaTime) {
+	bool execute(float deltaTime) override {
 		return execute();
 	}
 };
@@ -83,8 +84,12 @@ public:
 		if (task != NULL) {
 			this->dueTime += deltaTime;
 			return task(this->parameter);
+			Serial.println("Executed successfully");
 		}
-		else return false;
+		else {
+			Serial.println("Can't execute");
+			return false;
+		}
 	}
 };
 
@@ -304,7 +309,7 @@ DispatchQueueClass<TaskParam, AnimParam>::DispatchQueueClass()
 {
 	TaskQueue = LinkedList<ParameterTask<TaskParam>>();
 	AnimationQueue = LinkedList<ParameterTask<AnimParam>>();
-	animationDeltaTime = (unsigned long)((1 / 60) * sTOmics);
+	animationDeltaTime = (unsigned long)((1 / (float)60) * sTOmics);
 	//DispatchQueueClass<TaskParam, AnimParam>(60);
 }
 
@@ -328,14 +333,14 @@ template<typename TaskParam, typename AnimParam>
 void DispatchQueueClass<TaskParam, AnimParam>::addTask(bool(*task)(TaskParam*), TaskParam *param)
 {
 	TimedTask<TaskParam> newTask = TimedTask<TaskParam>(task, param, micros());
-	AnimationQueue.addBack(newTask);
+	TaskQueue.addBack(newTask);
 
 }
 template<typename TaskParam, typename AnimParam>
 void DispatchQueueClass<TaskParam, AnimParam>::addRepeatingTask(bool(*task)(TaskParam*), TaskParam *param, unsigned long deltaTime)
 {
 	FrequentTask<TaskParam> newTask = FrequentTask<TaskParam>(task, param, deltaTime);
-	AnimationQueue.addBack(newTask);
+	TaskQueue.addBack(newTask);
 }
 
 static bool sortforDueTime(Task left, Task right) {
@@ -366,8 +371,13 @@ template<typename TaskParam, typename AnimParam>
 void DispatchQueueClass<TaskParam, AnimParam>::animate(float deltaTime)
 {
 	if (AnimationQueue.size() > 0) {
-		
-		while (AnimationQueue.getRoot() != firstDoneThisFrame) {
+		Serial.print("Animate; deltaTime: ");
+		Serial.print(deltaTime);
+		Serial.print('\n');
+		firstDoneThisFrame = AnimationQueue.getRoot();
+		bool isfirstTask = true;
+		while (AnimationQueue.getRoot() != firstDoneThisFrame || !isfirstTask) {
+			isfirstTask = false;
 			ParameterTask<AnimParam> task = AnimationQueue.front();
 			bool doAgain = task.execute(deltaTime);
 			if (!doAgain) {
@@ -383,8 +393,12 @@ void DispatchQueueClass<TaskParam, AnimParam>::animate(float deltaTime)
 
 template<typename TaskParam, typename AnimParam>
 unsigned long DispatchQueueClass<TaskParam, AnimParam>::tryNextTask(unsigned long time/* = micros()*/) {
+	Serial.println("tryNextTask");
 	if (TaskQueue.size() > 0) {
 		ParameterTask<TaskParam> topTask = TaskQueue.front();
+		Serial.print("dueTime = ");
+		Serial.print((float)topTask.dueTime * micsTOs);
+		Serial.print('\n');
 		if (topTask.dueTime <= time) {
 			bool doAgain = topTask.execute();
 			if (doAgain) {
@@ -404,13 +418,20 @@ void DispatchQueueClass<TaskParam, AnimParam>::Loop() {
 	unsigned long time;
 	while (true) {
 		time = micros();
+		Serial.print("Loop; time: ");
+		Serial.print((float)time * micsTOs, 3);
+		Serial.print(", nextTaskDueTime: ");
+		Serial.print((float)nexTaskDueTime * micsTOs, 4);
+		Serial.print('\n');
+		/*
 		if (time > nextAnimationDueTime) {
 			float actualDeltaTime = (float)(micros() - lastTimeAnimated) * micsTOs;
 			lastTimeAnimated = time;
 			nextAnimationDueTime += animationDeltaTime;
 			animate(actualDeltaTime);
+			//Serial.println("");
 		}
-		else if (time > nexTaskDueTime) {
+		else*/ if (time > nexTaskDueTime) {
 			nexTaskDueTime = tryNextTask(time);
 		}
 	}

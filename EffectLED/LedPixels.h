@@ -108,7 +108,8 @@ class LedPixelsClass
  public:
 	 Adafruit_NeoPixel pixels;
 	LedPixelsClass();
-	LedPixelsClass(int pin, int numPixels, int fps = 60, DispatchQueueClass<TaskParameter, TaskParameter> *dq = NULL);
+	LedPixelsClass(int pin, int numPixels, int fps = 60);
+	LedPixelsClass(int pin, int numPixels, DispatchQueueClass<TaskParameter, TaskParameter> *dq = NULL);
 
 	void circleAround(int delayval, int length, int count, int colorCount, ...);
 

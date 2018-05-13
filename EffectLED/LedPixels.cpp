@@ -13,14 +13,9 @@ LedPixelsClass::LedPixelsClass()
 	pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRBW + NEO_KHZ800);
 	//DispatchQueue = DispatchQueueClass<TaskParameter, TaskParameter>::DispatchQueueClass(FPS);
 }
-LedPixelsClass::LedPixelsClass(int pin, int numPixels, int fps = 60, DispatchQueueClass<TaskParameter, TaskParameter> *dq)
+LedPixelsClass::LedPixelsClass(int pin, int numPixels, int fps = 60)
 {
-	if (dq != NULL) {
-		DispatchQueue = dq;
-	}
-	else {
-		DispatchQueue = new DispatchQueueClass<TaskParameter, TaskParameter>(fps/*, &showPixels*/);
-	}
+	DispatchQueue = new DispatchQueueClass<TaskParameter, TaskParameter>(fps/*, &showPixels*/);
 	//FPS = fps;
 	PIN = pin;
 	NUMPIXELS = numPixels;
@@ -31,6 +26,19 @@ LedPixelsClass::LedPixelsClass(int pin, int numPixels, int fps = 60, DispatchQue
 	//DispatchQueue = DispatchQueueClass<TaskParameter, TaskParameter>(FPS);
 }
 
+LedPixelsClass::LedPixelsClass(int pin, int numPixels, DispatchQueueClass<TaskParameter, TaskParameter> *dq)
+{
+	DispatchQueue = dq;
+	//FPS = fps;
+	PIN = pin;
+	NUMPIXELS = numPixels;
+	pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRBW + NEO_KHZ800);
+
+	pixels.begin(); // This initializes the NeoPixel library.
+	pixels.setPixelColor(4, 100, 0, 0, 0);
+	pixels.show();
+	//DispatchQueue = DispatchQueueClass<TaskParameter, TaskParameter>(FPS);
+}
 void LedPixelsClass::circleAround(int delayval, int length, int count, int colorCount, ...)
 {
 	int dist = (NUMPIXELS - (count * length)) / count;
