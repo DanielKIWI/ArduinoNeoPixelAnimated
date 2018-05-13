@@ -1,7 +1,7 @@
 // 
 // 
 // 
-
+/*
 #include "LedPixels.h"
 
 
@@ -15,7 +15,7 @@ LedPixelsClass::LedPixelsClass()
 }
 LedPixelsClass::LedPixelsClass(int pin, int numPixels, int fps = 60)
 {
-	DispatchQueue = new DispatchQueueClass<TaskParameter, TaskParameter>(fps/*, &showPixels*/);
+	DispatchQueue = new DispatchQueueClass(fps);
 	//FPS = fps;
 	PIN = pin;
 	NUMPIXELS = numPixels;
@@ -26,7 +26,7 @@ LedPixelsClass::LedPixelsClass(int pin, int numPixels, int fps = 60)
 	//DispatchQueue = DispatchQueueClass<TaskParameter, TaskParameter>(FPS);
 }
 
-LedPixelsClass::LedPixelsClass(int pin, int numPixels, DispatchQueueClass<TaskParameter, TaskParameter> *dq)
+LedPixelsClass::LedPixelsClass(int pin, int numPixels, DispatchQueueClass *dq)
 {
 	DispatchQueue = dq;
 	//FPS = fps;
@@ -39,6 +39,7 @@ LedPixelsClass::LedPixelsClass(int pin, int numPixels, DispatchQueueClass<TaskPa
 	pixels.show();
 	//DispatchQueue = DispatchQueueClass<TaskParameter, TaskParameter>(FPS);
 }
+/*
 void LedPixelsClass::circleAround(int delayval, int length, int count, int colorCount, ...)
 {
 	int dist = (NUMPIXELS - (count * length)) / count;
@@ -66,7 +67,7 @@ void LedPixelsClass::circleAround(int delayval, int length, int count, int color
 
 /*
 	speed: Pixel per second
-*/
+*
 void LedPixelsClass::InitAnimatedcircleAround(float speed, int length, int startIndex, Color color)
 {
 	unsigned long deltaMicros = (unsigned long)((1 / speed) * sTOmics);
