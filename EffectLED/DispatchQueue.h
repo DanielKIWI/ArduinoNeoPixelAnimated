@@ -52,6 +52,8 @@ public:
 
 class DispatchQueueClass
 {
+private:
+	bool ledOn = false;
  protected:
 
 	LinkedList<Task*> TaskQueue;
@@ -159,12 +161,12 @@ void DispatchQueueClass::animate(float deltaTime)
 
 
 unsigned long DispatchQueueClass::tryNextTask(unsigned long time/* = micros()*/) {
-	Serial.println("tryNextTask");
+	//Serial.println("tryNextTask");
 	if (TaskQueue.size() > 0) {
 		Task *topTask = TaskQueue.front();
-		Serial.print("dueTime = ");
+		/*Serial.print("dueTime = ");
 		Serial.print((float)topTask->dueTime * micsTOs);
-		Serial.print('\n');
+		Serial.print('\n');*/
 		if (topTask->dueTime <= time) {
 			bool doAgain = topTask->execute();
 			if (doAgain) {
@@ -179,25 +181,26 @@ unsigned long DispatchQueueClass::tryNextTask(unsigned long time/* = micros()*/)
 	else return 0.f;
 }
 
-
 void DispatchQueueClass::Loop() {
+	digitalWrite(LED_BUILTIN, ledOn ? HIGH : LOW);
+	ledOn = !ledOn;
 	unsigned long time;
 	while (true) {
 		time = micros();
-		Serial.print("Loop; time: ");
+		/*Serial.print("Loop; time: ");
 		Serial.print((float)time * micsTOs, 3);
 		Serial.print(", nextTaskDueTime: ");
 		Serial.print((float)nexTaskDueTime * micsTOs, 4);
-		Serial.print('\n');
-		/*
+		Serial.print('\n');*/
+		
 		if (time > nextAnimationDueTime) {
 			float actualDeltaTime = (float)(micros() - lastTimeAnimated) * micsTOs;
 			lastTimeAnimated = time;
 			nextAnimationDueTime += animationDeltaTime;
-			animate(actualDeltaTime);
+			//animate(actualDeltaTime);
 			//Serial.println("");
 		}
-		else*/ if (time > nexTaskDueTime) {
+		if (time > nexTaskDueTime) {
 			nexTaskDueTime = tryNextTask(time);
 		}
 	}

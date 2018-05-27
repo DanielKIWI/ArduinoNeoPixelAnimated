@@ -84,7 +84,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Users\Daniel\Documents\Arduino\libraries\LinkedList\LinkedList.h" />
     <ClInclude Include="Color.h" />
-    <ClInclude Include="Header.h" />
     <ClInclude Include="LedPixels.h" />
     <ClInclude Include="DispatchQueue.h" />
     <ClInclude Include="Math.h" />

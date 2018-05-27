@@ -36,9 +36,6 @@
     <ClInclude Include="Math.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SerialListener.h">
       <Filter>Header Files</Filter>
     </ClInclude>
