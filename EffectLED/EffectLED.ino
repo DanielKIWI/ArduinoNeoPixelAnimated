@@ -20,13 +20,12 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(108, 3, NEO_GRBW + NEO_KHZ800);
 float volume = 0.0f;
 Color ledColor = Color(100, 0, 0);
 void setup() {
-	pinMode(LED_BUILTIN, OUTPUT);
 	Serial.begin(9600);
 	Serial.println("DipatchQueue Initialized");
 	SerialListener *serialListener = new SerialListener(5.0f, &volume);
 	DispatchQueue.addTask(serialListener);
 
-	NeoPixels::VisualizeFloat *VolumeVisualizer1 = new NeoPixels::VisualizeFloat(&pixels, &volume, 0, 100, &ledColor, true);
+	NeoPixels::VisualizeFloat *VolumeVisualizer1 = new NeoPixels::VisualizeFloat(&pixels, &volume, 0, 100, &ledColor);
 	DispatchQueue.addAnimationTask(VolumeVisualizer1);
 
 

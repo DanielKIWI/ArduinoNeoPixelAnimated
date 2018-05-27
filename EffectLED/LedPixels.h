@@ -69,7 +69,6 @@ namespace NeoPixels {
 			maxPixelIndex = _maxPixelIndex;
 		}
 		bool execute(float deltaTime) override {
-			Serial.println("test");
 			float actValue = *targetValue;
 			float pixelsValue = actValue * (maxPixelIndex - minPixelIndex);
 			if (isInversed) {
